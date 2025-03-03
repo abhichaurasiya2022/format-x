@@ -1,6 +1,6 @@
 {
-    "name": "complete",
-    "short_name": "complete",
+    "name": "FormatX",
+    "short_name": "FormatX",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
