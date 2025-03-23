@@ -62,7 +62,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '1019977481684',
     projectId: 'formatx-30fed',
     storageBucket: 'formatx-30fed.firebasestorage.app',
-    iosBundleId: 'com.example.formatx',
+    iosBundleId: 'com.example.format_x',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
@@ -71,7 +71,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '1019977481684',
     projectId: 'formatx-30fed',
     storageBucket: 'formatx-30fed.firebasestorage.app',
-    iosBundleId: 'com.example.formatx',
+    iosBundleId: 'com.example.format_x',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
