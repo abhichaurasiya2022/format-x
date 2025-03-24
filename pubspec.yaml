@@ -9,6 +9,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  ffmpeg_kit_flutter:
+    path: C:/Users/abhic/Downloads/ffmpeg-kit/flutter/flutter
   firebase_auth: ^5.4.2
   firebase_core: ^3.11.0
   firebase_ui_auth: ^1.16.1
@@ -19,6 +21,10 @@ dependencies:
   path: ^1.8.3
   video_player: ^2.9.3
   chewie: ^1.10.0
+  path_provider: ^2.1.0
+  fluttertoast:
+    git:
+      url: https://github.com/ponnamkarthik/FlutterToast.git
 
 
 dev_dependencies:
@@ -29,4 +35,9 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
-    - assets/
+    - assets/machupicchu.jpg
+    - assets/pyramid.jpg
+    - assets/stonehenge.jpg
+    - assets/subtitle.srt
+    - assets/doppioone_regular.ttf
+    - assets/truenorg.otf
