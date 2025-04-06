@@ -1,3 +1,7 @@
+import 'package:flutter_ffmpeg_utils/flutter_ffmpeg_utils.dart';
+import 'package:path_provider/path_provider.dart';
+import 'dart:developer' as developer;
+
 import 'package:firebase_ui_auth/firebase_ui_auth.dart';
 import 'package:flutter/material.dart';
 import 'dart:io';
@@ -6,7 +10,7 @@ import 'package:open_file/open_file.dart';
 import 'package:path/path.dart' as path;
 import 'package:video_player/video_player.dart';
 import 'package:chewie/chewie.dart';
-
+import 'package:permission_handler/permission_handler.dart';
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -33,7 +37,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('My App'),
+        title: const Text('FormatX'),
         automaticallyImplyLeading: false,
       ),
       body: _screens[_selectedIndex],
@@ -53,7 +57,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-// Convert Screen with File Picker
+// Convert Screen with File Picker and Operation Selection
 class ConvertScreen extends StatefulWidget {
   const ConvertScreen({super.key});
 
@@ -67,6 +71,7 @@ class _ConvertScreenState extends State<ConvertScreen> {
   bool _isLoading = false;
   VideoPlayerController? _videoController;
   ChewieController? _chewieController;
+  String? _operation;
 
   @override
   void dispose() {
@@ -99,6 +104,7 @@ class _ConvertScreenState extends State<ConvertScreen> {
         setState(() {
           _selectedFile = file;
           _fileType = fileExtension;
+          _operation = null; // Reset operation selection
         });
 
         // Initialize video player if it's a video file
@@ -250,6 +256,32 @@ class _ConvertScreenState extends State<ConvertScreen> {
     }
   }
 
+  void _selectOperation(String operation) {
+    setState(() {
+      _operation = operation;
+    });
+  }
+
+  void _startProcessing() {
+    if (_operation == 'Compress') {
+      // Navigate to Compression Screen
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => CompressionScreen(selectedFile: _selectedFile!),
+        ),
+      );
+    } else if (_operation == 'Convert') {
+      // Navigate to Conversion Screen
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ConversionScreen(selectedFile: _selectedFile!),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -290,20 +322,36 @@ class _ConvertScreenState extends State<ConvertScreen> {
                       icon: const Icon(Icons.open_in_new),
                       label: const Text('Open File'),
                     ),
-                    const SizedBox(width: 16),
-                    ElevatedButton.icon(
-                      onPressed: () {
-                        // Here you would add your conversion logic
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Starting conversion...'),
-                          ),
-                        );
-                      },
-                      icon: const Icon(Icons.transform),
-                      label: const Text('Convert'),
-                    ),
                   ],
+                ),
+
+                const SizedBox(height: 20),
+                Text(
+                  'Select Operation',
+                  style: Theme.of(context).textTheme.headlineSmall,
+                ),
+                ListTile(
+                  title: const Text('Compress'),
+                  leading: Radio<String>(
+                    value: 'Compress',
+                    groupValue: _operation,
+                    onChanged: (value) => _selectOperation(value!),
+                  ),
+                ),
+                ListTile(
+                  title: const Text('Convert'),
+                  leading: Radio<String>(
+                    value: 'Convert',
+                    groupValue: _operation,
+                    onChanged: (value) => _selectOperation(value!),
+                  ),
+                ),
+
+                const SizedBox(height: 20),
+                ElevatedButton.icon(
+                  onPressed: _operation == null ? null : _startProcessing,
+                  icon: const Icon(Icons.play_arrow),
+                  label: const Text('Start Processing'),
                 ),
               ],
 
@@ -311,6 +359,233 @@ class _ConvertScreenState extends State<ConvertScreen> {
               // const SignOutButton(),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+
+
+
+
+class CompressionScreen extends StatefulWidget {
+  final File selectedFile;
+
+  CompressionScreen({required this.selectedFile});
+
+  @override
+  _CompressionScreenState createState() => _CompressionScreenState();
+}
+
+class _CompressionScreenState extends State<CompressionScreen> {
+  double _compressionLevel = 50.0;
+  bool _losslessCompression = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text('Compression Settings')),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text('Selected File: ${widget.selectedFile.path.split('/').last}'),
+            SizedBox(height: 20),
+            Text('Compression Level: ${_compressionLevel.toStringAsFixed(0)}%'),
+            Slider(
+              value: _compressionLevel,
+              min: 0.0,
+              max: 100.0,
+              onChanged: (value) {
+                setState(() {
+                  _compressionLevel = value;
+                });
+              },
+            ),
+            CheckboxListTile(
+              title: Text('Lossless Compression'),
+              value: _losslessCompression,
+              onChanged: (value) {
+                setState(() {
+                  _losslessCompression = value!;
+                });
+              },
+            ),
+            ElevatedButton.icon(
+              onPressed: () {
+                // Start compression process
+              },
+              icon: Icon(Icons.compress),
+              label: Text('Start Compression'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+class ConversionScreen extends StatefulWidget {
+  final File selectedFile;
+
+  ConversionScreen({required this.selectedFile});
+
+  @override
+  _ConversionScreenState createState() => _ConversionScreenState();
+}
+
+class _ConversionScreenState extends State<ConversionScreen> {
+  String? _selectedFormat;
+  bool _isProcessing = false;
+
+
+Future<void> convertVideo(File inputFile, String targetFormat, String outputPath) async {
+  try {
+    // Define the FFmpeg command based on the target format
+    List<String> command = [
+      "-i",
+      inputFile.path,
+      "-q:a",
+      "0", // Best quality for audio
+      "-q:v",
+      "0", // Best quality for video
+    ];
+
+    // Add format-specific options
+    switch (targetFormat.toLowerCase()) {
+      case 'mp4':
+        command.addAll(["-codec:v", "libx264", "-codec:a", "aac"]);
+        break;
+      case 'avi':
+        command.addAll(["-codec:v", "mpeg4", "-codec:a", "mp3"]);
+        break;
+      case 'mkv':
+        command.addAll(["-codec:v", "libx264", "-codec:a", "aac"]);
+        break;
+      case 'mp3':
+        command.addAll(["-vn", "-codec:a", "libmp3lame"]);
+        break;
+      case 'aac':
+        command.addAll(["-vn", "-codec:a", "aac"]);
+        break;
+      default:
+        throw Exception('Unsupported format: $targetFormat');
+    }
+
+    // Add the output path
+    command.add(outputPath);
+
+    // Execute the FFmpeg command
+    final String result = await FlutterFfmpegUtils().executeFFmpeg(command);
+    developer.log('FFmpeg Result: $result', name: 'convertVideo');
+  } catch (e) {
+    developer.log('Error in conversion: $e', name: 'convertVideo');
+    throw Exception('Error during conversion: $e');
+  }
+}
+
+
+  Future<void> _startConversion() async {
+    if (_selectedFormat == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select a target format')),
+      );
+      return;
+    }
+
+    setState(() {
+      _isProcessing = true;
+    });
+
+    try {
+      // Request storage permission
+      var status = await Permission.storage.request();
+      if (!status.isGranted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Storage permission is required')),
+        );
+        return;
+      }
+
+      // Use the public Downloads directory
+      final Directory downloadsDir = Directory('/storage/emulated/0/Download');
+
+      // Check if the directory exists
+      if (!await downloadsDir.exists()) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Downloads directory does not exist')),
+        );
+        return;
+      }
+
+      // Create a unique filename based on timestamp
+      final String outputFileName =
+          'converted_${DateTime.now().millisecondsSinceEpoch}.$_selectedFormat';
+      final String outputPath = '${downloadsDir.path}/$outputFileName';
+
+      // Debug log
+      developer.log('Saving to: $outputPath', name: 'ConversionScreen');
+
+      // Perform the conversion
+      await convertVideo(widget.selectedFile, _selectedFormat!, outputPath);
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('File saved to: $outputPath')));
+    } catch (e) {
+      developer.log('Error in conversion: $e', name: 'ConversionScreen');
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error during conversion: $e')));
+    } finally {
+      setState(() {
+        _isProcessing = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Choose Target Format')),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text('Selected File: ${widget.selectedFile.path.split('/').last}'),
+            const SizedBox(height: 20),
+            DropdownButtonFormField<String>(
+              decoration: const InputDecoration(labelText: 'Target Format'),
+              value: _selectedFormat,
+              items:
+                  ['MP4', 'AVI', 'MKV', 'MP3', 'AAC'].map((format) {
+                    return DropdownMenuItem<String>(
+                      value: format,
+                      child: Text(format),
+                    );
+                  }).toList(),
+              onChanged: (value) {
+                setState(() {
+                  _selectedFormat = value;
+                });
+              },
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton.icon(
+              onPressed: _isProcessing ? null : _startConversion,
+              icon:
+                  _isProcessing
+                      ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                      : const Icon(Icons.swap_horiz),
+              label: Text(_isProcessing ? 'Converting...' : 'Start Conversion'),
+            ),
+          ],
         ),
       ),
     );
