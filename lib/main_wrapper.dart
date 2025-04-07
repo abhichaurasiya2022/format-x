@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'home_screen.dart';
 import 'saved_screen.dart';
 import 'profile_screen.dart';
+import 'screens/saved/saved_files_screen.dart';
 
 class MainWrapper extends StatefulWidget {
   const MainWrapper({super.key});
@@ -13,11 +14,12 @@ class MainWrapper extends StatefulWidget {
 class _MainWrapperState extends State<MainWrapper> {
   int _currentIndex = 0;
 
-  final List<Widget> _screens = [
-    const HomeScreen(),
-    const SavedScreen(),
-    const ProfileScreen(),
-  ];
+
+final List<Widget> _screens = [
+  const HomeScreen(),
+  const SavedFilesScreen(), // ✅ Replace old SavedScreen
+  const ProfileScreen(),
+];
 
   @override
   Widget build(BuildContext context) {

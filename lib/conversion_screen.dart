@@ -4,6 +4,7 @@ import 'package:path/path.dart' as path;
 import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter_ffmpeg_utils/flutter_ffmpeg_utils.dart';
 import 'dart:developer' as developer;
+import './screens/common/process_result_screen.dart';
 
 class ConversionScreen extends StatefulWidget {
   final File selectedFile;
@@ -44,7 +45,7 @@ class _ConversionScreenState extends State<ConversionScreen> {
     final status = await Permission.storage.request();
     if (!status.isGranted) return;
 
-    final Directory dir = Directory('/storage/emulated/0/Download');
+    final Directory dir = Directory('/storage/emulated/0/Download/FormatX');
     final String outPath = path.join(
       dir.path,
       'converted_${DateTime.now().millisecondsSinceEpoch}.$_selectedFormat',
@@ -71,9 +72,11 @@ class _ConversionScreenState extends State<ConversionScreen> {
     try {
       final result = await FlutterFfmpegUtils().executeFFmpeg(command);
       developer.log('Conversion result: $result');
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('File saved to: $outPath')));
+Navigator.pushReplacement(
+  context,
+  MaterialPageRoute(builder: (_) => ProcessResultScreen(outputPath: outPath)),
+);
+
     } catch (e) {
       developer.log('Error: $e');
       ScaffoldMessenger.of(

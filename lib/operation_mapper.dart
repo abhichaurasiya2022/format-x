@@ -8,6 +8,7 @@ Map<String, FileTypeCategory> extensionMap = {
   '.png': FileTypeCategory.image,
   '.bmp': FileTypeCategory.image,
   '.webp': FileTypeCategory.image,
+  '.tiff': FileTypeCategory.image,
 
   // Video formats
   '.mp4': FileTypeCategory.video,
@@ -15,32 +16,64 @@ Map<String, FileTypeCategory> extensionMap = {
   '.avi': FileTypeCategory.video,
   '.mkv': FileTypeCategory.video,
   '.flv': FileTypeCategory.video,
+  '.webm': FileTypeCategory.video,
 
   // Audio formats
   '.mp3': FileTypeCategory.audio,
   '.aac': FileTypeCategory.audio,
   '.wav': FileTypeCategory.audio,
   '.ogg': FileTypeCategory.audio,
+  '.flac': FileTypeCategory.audio,
+  '.m4a': FileTypeCategory.audio,
 };
 
 /// Map operations supported for each file type category
 Map<FileTypeCategory, List<String>> operationMap = {
-  FileTypeCategory.image: ['Compress Image', 'Convert to PDF'],
   FileTypeCategory.video: [
-    'Compress Video',
-    'Convert to MP3',
-    'Convert to AAC',
     'Convert Format',
+    'Compress Video',
+    'Trim Video',
+    'Extract Audio (MP3)',
+    'Extract Audio (AAC)',
+    'Extract Audio (WAV)',
+    'Create GIF',
+    'Extract Frames',
+    'Change Resolution',
+    'Change Frame Rate',
+    'Add Watermark',
+    'Rotate/Flip',
+    'Change Aspect Ratio',
+    'Merge Videos',
+    'Add Subtitles',
   ],
-  FileTypeCategory.audio: ['Convert Format'],
+  FileTypeCategory.audio: [
+    'Convert Format',
+    'Compress Audio',
+    'Trim Audio',
+    'Merge Audios',
+    'Extract Segment',
+    'Normalize Volume',
+    'Change Sample Rate',
+    'Remove Silence',
+    'Change Channels',
+  ],
+  FileTypeCategory.image: [
+    'Convert Format',
+    'Compress Image',
+    'Resize Image',
+    'Convert to PDF',
+    'Create GIF from Images',
+    'Change DPI',
+    'Add Watermark',
+    'Rotate/Flip',
+    'Extract Metadata',
+  ],
 };
 
-/// Return the category for a given file extension
 FileTypeCategory? getFileCategory(String extension) {
   return extensionMap[extension.toLowerCase()];
 }
 
-/// Return supported operations for a file category
 List<String> getAvailableOperations(FileTypeCategory category) {
   return operationMap[category] ?? [];
 }

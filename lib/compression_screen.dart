@@ -5,6 +5,8 @@ import 'package:path_provider/path_provider.dart';
 import 'package:flutter_ffmpeg_utils/flutter_ffmpeg_utils.dart';
 import 'dart:developer' as developer;
 import 'package:path/path.dart' as path;
+import './screens/common/process_result_screen.dart';
+
 
 class CompressionScreen extends StatefulWidget {
   final File selectedFile;
@@ -24,7 +26,7 @@ class _CompressionScreenState extends State<CompressionScreen> {
     final status = await Permission.storage.request();
     if (!status.isGranted) return;
 
-    final dir = Directory('/storage/emulated/0/Download');
+    final dir = Directory('/storage/emulated/0/Download/FormatX');
     final String outPath = path.join(
       dir.path,
       'compressed_${DateTime.now().millisecondsSinceEpoch}.jpg',
@@ -41,9 +43,11 @@ class _CompressionScreenState extends State<CompressionScreen> {
     try {
       final result = await FlutterFfmpegUtils().executeFFmpeg(command);
       developer.log('Compression Result: $result');
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('File saved to: $outPath')));
+Navigator.pushReplacement(
+  context,
+  MaterialPageRoute(builder: (_) => ProcessResultScreen(outputPath: outPath)),
+);
+
     } catch (e) {
       developer.log('Error: $e');
       ScaffoldMessenger.of(
