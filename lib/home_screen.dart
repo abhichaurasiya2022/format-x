@@ -1,12 +1,12 @@
+// Fully updated HomeScreen with better structure and feature grouping
 import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:path/path.dart' as path;
 import 'operation_mapper.dart';
 
+// Screens
 import 'conversion_screen.dart';
-
-// Video screens
 import '../screens/video/trim_video_screen.dart';
 import '../screens/video/extract_audio_screen.dart';
 import '../screens/video/create_gif_screen.dart';
@@ -18,8 +18,6 @@ import '../screens/video/rotate_flip_screen.dart';
 import '../screens/video/change_aspect_ratio_screen.dart';
 import '../screens/video/merge_videos_screen.dart';
 import '../screens/video/add_subtitles_screen.dart';
-
-// Audio screens
 import '../screens/audio/convert_audio_screen.dart';
 import '../screens/audio/compress_audio_screen.dart';
 import '../screens/audio/trim_audio_screen.dart';
@@ -29,8 +27,6 @@ import '../screens/audio/normalize_audio_screen.dart';
 import '../screens/audio/change_sample_rate_screen.dart';
 import '../screens/audio/remove_silence_screen.dart';
 import '../screens/audio/change_channels_screen.dart';
-
-// Image screens
 import '../screens/image/convert_image_screen.dart';
 import '../screens/image/resize_image_screen.dart';
 import '../screens/image/compress_image_screen.dart';
@@ -52,7 +48,6 @@ class _HomeScreenState extends State<HomeScreen> {
   List<String> _availableOperations = [];
   String? _selectedOperation;
 
-
   Future<bool> _confirmOperation(String operation, File file) async {
     return await showDialog<bool>(
           context: context,
@@ -61,8 +56,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 title: const Text('Confirm Operation'),
                 content: Text(
                   'You selected:\n\n'
-                  '📁 File: ${path.basename(file.path)}\n'
-                  '⚙️ Operation: $operation\n\nProceed?',
+                  '📁 File: \${path.basename(file.path)}\n'
+                  '⚙️ Operation: \$operation\n\nProceed?',
                 ),
                 actions: [
                   TextButton(
@@ -104,12 +99,14 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _startOperation() async {
-  if (_selectedFile == null || _selectedOperation == null) return;
+    if (_selectedFile == null || _selectedOperation == null) return;
 
-  // 🛑 Confirm with user
-  final confirmed = await _confirmOperation(_selectedOperation!, _selectedFile!);
-  if (!confirmed) return;
-  
+    final confirmed = await _confirmOperation(
+      _selectedOperation!,
+      _selectedFile!,
+    );
+    if (!confirmed) return;
+
     if (_selectedOperation == 'Trim Video') {
       Navigator.push(
         context,
@@ -181,7 +178,8 @@ class _HomeScreenState extends State<HomeScreen> {
               (context) => ChangeFramerateScreen(selectedFile: _selectedFile!),
         ),
       );
-    } else if (_selectedOperation == 'Add Watermark') {
+    } else if (_selectedOperation == 'Add Watermark' &&
+        _category == FileTypeCategory.video) {
       Navigator.push(
         context,
         MaterialPageRoute(
@@ -189,7 +187,8 @@ class _HomeScreenState extends State<HomeScreen> {
               (context) => AddWatermarkScreen(selectedFile: _selectedFile!),
         ),
       );
-    } else if (_selectedOperation == 'Rotate/Flip') {
+    } else if (_selectedOperation == 'Rotate/Flip' &&
+        _category == FileTypeCategory.video) {
       Navigator.push(
         context,
         MaterialPageRoute(
@@ -324,7 +323,8 @@ class _HomeScreenState extends State<HomeScreen> {
           builder: (context) => const CreateGifFromImagesScreen(),
         ),
       );
-    } else if (_selectedOperation == 'Rotate/Flip') {
+    } else if (_selectedOperation == 'Rotate/Flip' &&
+        _category == FileTypeCategory.image) {
       Navigator.push(
         context,
         MaterialPageRoute(
@@ -356,69 +356,80 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  Widget _buildCardStep({required String label, required Widget child}) {
+    return Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      margin: const EdgeInsets.only(bottom: 16),
+      elevation: 3,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(label, style: Theme.of(context).textTheme.titleMedium),
+            const SizedBox(height: 8),
+            child,
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('FormatX'), centerTitle: true),
-body: SingleChildScrollView(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Center(
-              child: Column(
-                children: [
-                  Image.asset('assets/home_logo.png', height: 60),
-                  const SizedBox(height: 10),
-                  Text(
-                    'Welcome to FormatX!',
-                    style: Theme.of(context).textTheme.headlineSmall,
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 30),
-            Center(
+            const SizedBox(height: 20,),
+
+            _buildCardStep(
+              label: 'Select a File',
               child: ElevatedButton.icon(
                 onPressed: _pickFile,
                 icon: const Icon(Icons.folder_open),
-                label: const Text('Select File'),
-              ),
-            ),
-            const SizedBox(height: 20),
-            if (_selectedFile != null) ...[
-              const Divider(),
-              Text('Selected File: ${path.basename(_selectedFile!.path)}'),
-              Text('Detected Type: ${_category?.name ?? 'Unknown'}'),
-            ],
-            const SizedBox(height: 20),
-            if (_availableOperations.isNotEmpty) ...[
-              const Divider(),
-              Text(
-                'Select Operation:',
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-              const SizedBox(height: 8),
-              ..._availableOperations.map(
-                (op) => RadioListTile<String>(
-                  title: Text(op),
-                  value: op,
-                  groupValue: _selectedOperation,
-                  onChanged: (val) {
-                    setState(() => _selectedOperation = val);
-                  },
+                label: Text(
+                  _selectedFile == null
+                      ? 'Choose File'
+                      : path.basename(_selectedFile!.path),
                 ),
               ),
-              const SizedBox(height: 10),
+            ),
+
+            if (_selectedFile != null && _category != null)
+              _buildCardStep(
+                label: 'Detected Type: ${_category!.name.toUpperCase()}',
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Available Operations:',
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                    ..._availableOperations.map(
+                      (op) => RadioListTile<String>(
+                        title: Text(op),
+                        value: op,
+                        groupValue: _selectedOperation,
+                        onChanged:
+                            (val) => setState(() => _selectedOperation = val),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+            if (_selectedOperation != null)
               Center(
                 child: ElevatedButton.icon(
-                  onPressed:
-                      _selectedOperation != null ? _startOperation : null,
+                  onPressed: _startOperation,
                   icon: const Icon(Icons.play_arrow),
                   label: const Text('Start Operation'),
                 ),
               ),
-            ],
           ],
         ),
       ),
