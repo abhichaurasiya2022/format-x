@@ -12,7 +12,7 @@ FormatX is a Flutter-based media processing app powered by FFmpeg and Firebase. 
 - 👤 User Profile with Photo Upload
 - 📱 Responsive UI with Bottom Navigation
 
-## Screenshots
+
 
 <img src="assets/home_logo.png" width="150"/>
 
