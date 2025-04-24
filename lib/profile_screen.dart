@@ -119,24 +119,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       },
                     ),
                     const SizedBox(height: 10),
-                    ElevatedButton.icon(
-                      icon: const Icon(Icons.email),
-                      label: const Text('Verify Email'),
-                      onPressed: () async {
-                        try {
-                          await user?.sendEmailVerification();
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Verification email sent'),
-                            ),
-                          );
-                        } catch (e) {
-                          ScaffoldMessenger.of(
-                            context,
-                          ).showSnackBar(SnackBar(content: Text('Error: $e')));
-                        }
-                      },
-                    ),
+                    if (user?.emailVerified == false)
+                      ElevatedButton.icon(
+                        icon: const Icon(Icons.email),
+                        label: const Text('Verify Email'),
+                        onPressed: () async {
+                          try {
+                            await user?.sendEmailVerification();
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Verification email sent'),
+                              ),
+                            );
+                          } catch (e) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Error: $e')),
+                            );
+                          }
+                        },
+                      ),
+
                     const SizedBox(height: 30),
                     SizedBox(
                       width: double.infinity,

@@ -34,8 +34,8 @@ class AuthGate extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(vertical: 8.0),
                 child:
                     action == AuthAction.signIn
-                        ? const Text('Welcome to FlutterFire, please sign in!')
-                        : const Text('Welcome to Flutterfire, please sign up!'),
+                        ? const Text('Welcome to FormatX, please sign in!')
+                        : const Text('Welcome to FormatX, please sign up!'),
               );
             },
             footerBuilder: (context, action) {
